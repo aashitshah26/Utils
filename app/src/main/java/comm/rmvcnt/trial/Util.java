@@ -26,6 +26,7 @@ import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewDebug;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
@@ -493,6 +494,46 @@ public class Util {
     public static double calculateIdealWeight(double height){
         double x = (2.2*(22))+((3.5*22)*((height/100)-1.5));
         return  Math.round(x*10.0)/10.0;
+    }
+
+
+    /**
+     * String values = flagsToString(WindowManager.LayoutParams.class, "flags", 1832);
+     *
+     * @param clazz  Pass the class of the flags.
+     * @param field Field name of the flags.
+     * @param flags value of flags.
+     * @return String containing String flags.
+     */
+    public static String flagsToString(Class<?> clazz, String field, int flags) {
+        final ViewDebug.FlagToString[] mapping = getFlagMapping(clazz, field);
+        if (mapping == null) {
+            return Integer.toHexString(flags);
+        }
+        final StringBuilder result = new StringBuilder();
+        final int count = mapping.length;
+        for (int j = 0; j < count; j++) {
+            final ViewDebug.FlagToString flagMapping = mapping[j];
+            final boolean ifTrue = flagMapping.outputIf();
+            final int maskResult = flags & flagMapping.mask();
+            final boolean test = maskResult == flagMapping.equals();
+            if (test && ifTrue) {
+                final String name = flagMapping.name();
+                result.append(name).append(' ');
+            }
+        }
+        if (result.length() > 0) {
+            result.deleteCharAt(result.length() - 1);
+        }
+        return result.toString();
+    }
+
+    private static ViewDebug.FlagToString[] getFlagMapping(Class<?> clazz, String field) {
+        try {
+            return clazz.getDeclaredField(field).getAnnotation(ViewDebug.ExportedProperty.class).flagMapping();
+        } catch (NoSuchFieldException e) {
+            return null;
+        }
     }
 
 
